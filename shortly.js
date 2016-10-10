@@ -64,6 +64,12 @@ app.get('/signup', function(req, res) {
   res.render('signup');
 });
 
+app.get('/logout', function(req, res) {
+  req.session.destroy(function() {
+    res.redirect('/login');
+  });
+});
+
 app.post('/signup', function(req, res) {
   var username = req.body.username;
   var password = req.body.password;
@@ -89,6 +95,24 @@ app.post('/signup', function(req, res) {
     }
   });
 });
+
+app.post('/login', function(req, res) {
+  var username = req.body.username;
+  var password = req.body.password;
+
+  new User({username: username, password: password}).fetch()
+  .then(function(found) {
+    if (found) {
+      req.session.user = found.attributes.username;
+      res.redirect('/');
+    } else {
+      console.log('invalid username or password');
+      res.redirect('/login');
+      // res.end();
+    }
+  });
+});
+
 
 app.post('/links', 
 function(req, res) {
