@@ -29,11 +29,13 @@ app.use(session({
 
 
 var restrict = function(req, res, next) {
+  // console.log('request session', req.session);
+
   if (req.session.user) {
     next();
   } else {
     req.session.error = 'Access denied!';
-    res.redirect('login');
+    res.redirect('/login');
   } 
 };
 
@@ -56,6 +58,36 @@ function(req, res) {
 
 app.get('/login', function(req, res) {
   res.render('login');
+});
+
+app.get('/signup', function(req, res) {
+  res.render('signup');
+});
+
+app.post('/signup', function(req, res) {
+  var username = req.body.username;
+  var password = req.body.password;
+  //validate user
+  //validate password
+
+  //check if username exists in database
+    //if exists, return username taken
+    //otherwise make new user in db
+  new User({username: username}).fetch().then(function(found) {
+    if (found) {
+      console.log('username taken');
+      res.sendStatus(202);
+    } else {
+      Users.create({
+        username: username,
+        password: password
+      })
+      .then(function(newUser) {
+        req.session.user = newUser.attributes.username;
+        res.redirect('/');
+      });
+    }
+  });
 });
 
 app.post('/links', 
