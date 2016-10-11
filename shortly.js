@@ -3,6 +3,7 @@ var util = require('./lib/utility');
 var partials = require('express-partials');
 var bodyParser = require('body-parser');
 var session = require('express-session');
+var bcrypt = require('bcrypt-nodejs');
 
 var db = require('./app/config');
 var Users = require('./app/collections/users');
@@ -108,17 +109,23 @@ app.post('/login', function(req, res) {
   var username = req.body.username;
   var password = req.body.password;
 
-  new User({username: username, password: password}).fetch()
-  .then(function(found) {
-    if (found) {
-      req.session.user = found.attributes.username;
-      res.redirect('/');
-    } else {
-      console.log('invalid username or password');
-      res.redirect('/login');
-      // res.end();
-    }
-  });
+  new User({username: username}).fetch()
+    .then(function(found) {
+      if (found) {
+        var salt = found.attributes.salt;
+        var encryptpw = found.attributes.password;
+        if (bcrypt.hashSync(password, salt) === encryptpw) {
+          req.session.user = found.attributes.username;
+          res.redirect('/');          
+        } else {
+          console.log('invalid username or password');
+          res.redirect('/login');
+        }
+      } else {
+        console.log('invalid username or password');
+        res.redirect('/login');
+      }
+    });
 });
 
 
@@ -167,6 +174,7 @@ function(req, res) {
 /************************************************************/
 
 app.get('/*', function(req, res) {
+  console.log(req.params[0]);
   new Link({ code: req.params[0] }).fetch().then(function(link) {
     if (!link) {
       res.redirect('/');
