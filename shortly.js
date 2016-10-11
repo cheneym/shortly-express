@@ -52,9 +52,26 @@ function(req, res) {
 
 app.get('/links', restrict,
 function(req, res) {
-  Links.reset().fetch().then(function(links) {
-    res.status(200).send(links.models);
-  });
+  var username = req.session.user;
+  new User({ username: username }).fetch()
+    .then(function(found) {
+      Links.reset().fetch().then(function(links) {
+        var models = links.models.filter(function(model) {
+          return model.attributes.user_id === found.attributes.id;
+        });
+        res.status(200).send(models);
+        // links({'user_id': found.attributes.id}).fetch()
+        // .then(function(found) {
+        //   console.log(found);
+        //   res.status(200).send(found);
+        // });
+      });
+      // new Link({'user_id': found.attributes.id}).fetch()
+      //   .then(function(found) {
+      //     console.log(found);
+      //     res.status(200).send(found);
+      //   });
+    });
 });
 
 app.get('/login', function(req, res) {
@@ -147,15 +164,19 @@ function(req, res) {
           console.log('Error reading URL heading: ', err);
           return res.sendStatus(404);
         }
-
-        Links.create({
-          url: uri,
-          title: title,
-          baseUrl: req.headers.origin
-        })
-        .then(function(newLink) {
-          res.status(200).send(newLink);
-        });
+        var username = req.session.user;
+        new User({ username: username }).fetch()
+          .then(function(found) {
+            Links.create({
+              url: uri,
+              title: title,
+              baseUrl: req.headers.origin,
+              'user_id': found.attributes.id
+            })
+            .then(function(newLink) {
+              res.status(200).send(newLink);
+            });
+          });
       });
     }
   });
@@ -174,7 +195,6 @@ function(req, res) {
 /************************************************************/
 
 app.get('/*', function(req, res) {
-  console.log(req.params[0]);
   new Link({ code: req.params[0] }).fetch().then(function(link) {
     if (!link) {
       res.redirect('/');
