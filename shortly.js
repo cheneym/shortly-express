@@ -140,10 +140,7 @@ function(req, res) {
 app.get('/links', loggedIn,
 function(req, res) {
   Links.reset().fetch().then(function(links) {
-    var models = links.models.filter(function(model) {
-      return model.attributes.user_id === req.user.id;
-    });
-    res.status(200).send(models);
+    res.status(200).send(links.where({ 'user_id': req.user.id }));
   });
 });
 
