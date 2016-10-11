@@ -74,7 +74,15 @@ app.post('/signup', function(req, res) {
   var username = req.body.username;
   var password = req.body.password;
   //validate user
+  if (util.isValidUsername(username)) {
+    console.log('Invalid username format: ', username);
+    return res.redirect('/signup');
+  }
   //validate password
+  if (util.isValidPassword(username)) {
+    console.log('Invalid password format');
+    return res.redirect('/signup');
+  }
 
   //check if username exists in database
     //if exists, return username taken
@@ -82,7 +90,7 @@ app.post('/signup', function(req, res) {
   new User({username: username}).fetch().then(function(found) {
     if (found) {
       console.log('username taken');
-      res.sendStatus(202);
+      return res.sendStatus(404);
     } else {
       Users.create({
         username: username,
