@@ -189,8 +189,10 @@ app.post('/signup', function(req, res) {
         password: password
       })
       .then(function(newUser) {
-        req.session.user = newUser.attributes.username;
-        res.redirect('/');
+        req.logIn(newUser, function(err) {
+          if (err) { return next(err); }
+          return res.redirect('/');
+        });
       });
     }
   });

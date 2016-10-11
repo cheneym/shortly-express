@@ -1,7 +1,7 @@
 var db = require('../config');
 var bcrypt = require('bcrypt-nodejs');
 var Promise = require('bluebird');
-
+var bcryptAsync = Promise.promisifyAll(bcrypt);
 
 
 var User = db.Model.extend({
@@ -16,6 +16,26 @@ var User = db.Model.extend({
     });
   }
 });
+
+
+// var User = db.Model.extend({
+//   tableName: 'users',
+//   hasTimestamps: true,
+//   initialize: function() {
+//     this.on('creating', function(model, attrs, options) {
+//       return bcryptAsync.genSaltAsync()
+//       .then(function(salt) {
+//         model.set('salt', salt);
+//         return bcryptAsync.hashAsync(model.get('password'), salt);
+//       }).then(function(password) {
+//         return model.set('password', password);
+//       });
+//     });
+//   }
+// });
+
+
+
 
 module.exports = User;
 
