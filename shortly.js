@@ -71,59 +71,38 @@ var loggedIn = function(req, res, next) {
   }
 };
 
-// passport.use(new GoogleStrategy({
-//   consumerKey: GOOGLE_CONSUMER_KEY,
-//   consumerSecret: GOOGLE_CONSUMER_SECRET,
-//   callbackURL: "http://www.example.com/auth/google/callback"
-// },
-//   function(token, tokenSecret, profile, done) {
-//     User.findOrCreate({ googleId: profile.id }, function (err, user) {
-//       return done(err, user);
-//     });
-//   }
-// ));
+passport.use(new GitHubStrategy({
+  clientID: '633ea50bf8af2328bc5f',
+  clientSecret: '200c478cc9719068771e9f5910436c47c53a3d51',
+  callbackURL: 'http://localhost:4568/auth/github/callback'
+}, function(accessToken, refreshToken, profile, done) {
+  // User.findOrCreate({ id: profile.id }, function (err, user) {
+  //   return done(err, user);
+  // });
+  new User({username: profile.username }).fetch().then(function(found) {
+    if (found) {
+      return done(null, found.attributes);
+    } else {
+      Users.create({
+        username: profile.username,
+        password: 'm3vaQN58RsA3Wvf6LLVs'
+      })
+      .then(function(newUser) {
+        return done(null, newUser);
+      });
+    }
+  });
+}));
 
-// app.get('/auth/google',
-//   passport.authenticate('google', { scope: 'https://www.google.com/m8/feeds' });
+app.get('/auth/github',
+  passport.authenticate('github', { scope: [ 'user:email' ] }));
 
-// app.get('/auth/google/callback', 
-//   passport.authenticate('google', { failureRedirect: '/login' }),
-//   function(req, res) {
-//     res.redirect('/');
-//   });
-
-
-// passport.use(new GitHubStrategy({
-//   clientID: config.github.clientID,
-//   clientSecret: config.github.clientSecret,
-//   callbackURL: config.github.callbackURL
-// }, function(accessToken, refreshToken, profile, done) {
-
-//   var searchQuery = {
-//     name: profile.displayName
-//   };
-
-//   var updates = {
-//     name: profile.displayName,
-//     someID: profile.id
-//   };
-
-//   var options = {
-//     upsert: true
-//   };
-
-//   // update the user if s/he exists or add a new user
-//   User.findOneAndUpdate(searchQuery, updates, options, function(err, user) {
-//     if (err) {
-//       return done(err);
-//     } else {
-//       return done(null, user);
-//     }
-//   });
-// }
-
-// ));
-
+app.get('/auth/github/callback', 
+  passport.authenticate('github', { failureRedirect: '/login' }),
+  function(req, res) {
+    // Successful authentication, redirect home.
+    res.redirect('/');
+  });
 
 app.get('/', loggedIn,
 function(req, res) {
